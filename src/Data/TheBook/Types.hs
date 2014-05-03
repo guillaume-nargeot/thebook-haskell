@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Data.TheBook.Types (
     Price, TickSize, Qty
-  , Instrument, Market, Currency
+  , Instrument(..), Market, Currency
   , Time
   , Dictionary, TickRule(..), WithDictionary, dictL, dictionary
   , WithSession, sessionL, SessionID
@@ -31,15 +31,13 @@ module Data.TheBook.Types (
 
 import           Control.Applicative       ((<$>), (<*>))
 import           Control.Lens              (Lens', makeLenses)
-import           Control.Monad             (MonadPlus, mplus, mzero)
-import           Control.Monad.Error       (Error)
+import           Control.Monad             (MonadPlus, mzero)
 import           Data.ByteString           (ByteString)
 import           Data.Function             (on)
 import           Data.List                 (find, sortBy)
 import           Data.Text                 (Text)
 import qualified Data.Text                 as T
 import qualified Data.Time.Clock           as Clock
-import           Data.Word                 (Word64)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import           Test.QuickCheck.Gen       (Gen, elements)
 
@@ -60,8 +58,8 @@ type Qty = Int
 
 -- | Tradable instrument.
 data Instrument = Instrument {
-    _iMarket :: !Market
-  , _iSymbol :: !Text
+    _iSymbol :: !Text
+  , _iMarket :: !Market
 } deriving (Eq, Show)
 instance Arbitrary Instrument where
   arbitrary = Instrument <$> arbitraryText <*> arbitraryText
@@ -86,18 +84,18 @@ type ExecId = Int
 
 -- | Extracts 'SessionID' from the state.
 class WithSession a where
-  sessionL :: Lens' a SessionID
+  sessionL :: Lens' a (Maybe SessionID)
 
 -- | Tick rule specifies price increments at given price range.
 data TickRule = TickRule {
 
-    -- | Size of a tick.
-    _tickSize  :: !TickSize
-
     -- | At which price does this rule apply.
-  , _tickPrice :: !Price
+    _tickPrice :: !Price
+
+    -- | Size of a tick.
+  , _tickSize  :: !TickSize
 } deriving (Eq, Show)
-makeLenses ''TickRule
+$(makeLenses ''TickRule)
 
 -- | Information about an instrument that can be traded.
 data Dictionary = Dictionary {
@@ -111,9 +109,9 @@ data Dictionary = Dictionary {
     -- | Tick rules of the instrument.
   , _dTickRules  :: ![TickRule]
 } deriving (Eq, Show)
-makeLenses ''Dictionary
+$(makeLenses ''Dictionary)
 
--- | Extracts the 'Dictionary' from
+-- | Lens for 'Dictionary' from some state.
 class WithDictionary a where
   dictL :: Lens' a Dictionary
 
@@ -148,14 +146,15 @@ data Order = Order {
   , _oSide       :: !Side
   , _oInstrument :: !Instrument
   , _oVersions   :: ![OrderVersion]
-}
+} deriving (Show, Eq)
 
+-- | Lens for 'Order' from some type.
 class WithOrder a where
   orderL :: Lens' a (Maybe Order)
 
 data OrderVersion = OrderVersion {
 
-}
+} deriving (Show, Eq)
 
 -----------------------------------------------------------------------------
 -- * Enums
@@ -336,7 +335,6 @@ data OutgoingMessage
     , _erOrder      :: !Order
     , _erPrice      :: !Price
     , _erQty        :: !Qty }
-
 
 
 

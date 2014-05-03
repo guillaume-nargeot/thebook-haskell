@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Data.TheBook.MonadTest
@@ -10,9 +11,9 @@
 -----------------------------------------------------------------------------
 module Data.TheBook.MonadTest (tests) where
 
-import           Control.Monad         (mzero)
+import           Control.Monad         (mzero, (>>))
 import           Data.TheBook.Monad
-import           Data.TheBook.Types    as Types
+import           Data.TheBook.Types    as T
 import           Test.Tasty
 import           Test.Tasty.QuickCheck as QC
 
@@ -23,14 +24,28 @@ qcProps :: TestTree
 qcProps = testGroup "(checked by QuickCheck)"
   [ QC.testProperty "return in Monad should match" prop_return_should_match
   , QC.testProperty ">>= in Monad should stop at NoMatch" prop_bind_should_stop_at_no_match
-  , QC.testProperty "dummy" prop
   ]
 
-type TestRule   a = Rule Int [String] String a
-type TestResult a = Result Int [String] String a
+type TestRule a = Rule Int [String] String a
 
 s' :: Int
 s' = 1
+
+instrument :: T.Instrument
+instrument = T.Instrument "VOD.L" "XLON"
+
+currency :: T.Currency
+currency = "GBP"
+
+tickRules :: [T.TickRule]
+tickRules = [
+    T.TickRule { _tickPrice = 1.0    , _tickSize = 0.001 }
+  , T.TickRule { _tickPrice = 100.0  , _tickSize = 0.1   }
+  , T.TickRule { _tickPrice = 1000.0 , _tickSize = 1.0   }
+  ]
+
+dictionary :: T.Dictionary
+dictionary = T.dictionary instrument currency tickRules
 
 isMatch :: (Eq s, Eq w, Eq a) => s -> w -> a -> Result s w e a -> Bool
 isMatch s w a r = case r of
@@ -49,6 +64,6 @@ prop_return_should_match i = isMatch s' [] i (runRule rule s')
 prop_bind_should_stop_at_no_match :: Bool
 prop_bind_should_stop_at_no_match = isNoMatch (runRule rule s')
   where rule :: TestRule Int
-        rule = mzero
+        rule = return (1 :: Int) >> mzero >> return 1
 
-prop = True
+

@@ -14,18 +14,13 @@
 -----------------------------------------------------------------------------
 module Data.TheBook.Rule where
 
-import           Control.Applicative  (Applicative, (<$>), (<*>))
-import           Control.Lens         (Getter, Lens', use, view)
-import           Control.Lens.Getter  (use, view)
-import           Control.Monad        (MonadPlus, mzero, (=<<), (>>=))
+import           Control.Applicative  (Applicative)
+import           Control.Lens         (Lens', use, view)
+import           Control.Monad        (MonadPlus, mzero)
 import           Control.Monad.Error  (MonadError, throwError)
 import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.State  (MonadState)
 import           Control.Monad.Writer (MonadWriter, tell)
-import qualified Data.FIX.Parser      as FIX (messageP, nextP)
-import           Data.Maybe           (maybe)
-import           Data.TheBook.Book    (Book)
-import qualified Data.TheBook.Book    as Book
 import           Data.TheBook.Types   (OrderRejectReason,
                                        OrderRejectReason (..), SessionID,
                                        WithDictionary, WithOrder, WithSession,
@@ -35,9 +30,9 @@ data Command msg
   = SendMessage msg SessionID
 
 -- | Sends a message to the current session.
-replyWith :: (WithSession a, Functor m, Monad m, MonadReader a m, MonadWriter [Command msg] m) => msg -> m ()
+replyWith :: (WithSession a, Functor m, Monad m, MonadReader a m, MonadPlus m, MonadWriter [Command msg] m) => msg -> m ()
 replyWith msg = do
-  ses <- view sessionL
+  ses <- condR sessionL
   tell [SendMessage msg ses]
 
 require :: MonadError e m => Bool -> e ->  m ()

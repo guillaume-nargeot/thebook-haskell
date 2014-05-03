@@ -24,6 +24,7 @@ module Data.TheBook.Book (
  ) where
 
 import           Control.Arrow      ((&&&))
+import           Control.Lens       (Lens')
 import qualified Data.Foldable      as Fold
 import qualified Data.List          as List
 import           Data.Map           (Map)
@@ -37,7 +38,7 @@ import qualified Data.Tuple         as Tuple
 data Entry = Entry {
       price :: Types.Price
     , qty   :: Types.Qty
-} deriving Show
+} deriving (Show, Eq)
 
 -- | Specifies a side of the book.
 -- See 'Buy' and 'Sell' for possible values.
@@ -49,10 +50,16 @@ class (Ord a) => Side a where
 newtype Buy = Buy Types.Price
   deriving (Show)
 
+class WithTopBuy a where
+  topBuyL :: Lens' a (Maybe Entry)
+
 -- | Specifies a sell 'Book'.
 -- Entries will be sorted from low to high price.
 newtype Sell = Sell Types.Price
   deriving (Show)
+
+class WithTopSell a where
+  topSellL :: Lens' a (Maybe Entry)
 
 instance Eq Buy where
     (Buy p1) == (Buy p2) = p1 == p2
@@ -69,7 +76,7 @@ instance Side Sell where
 
 -- | Limit order book.
 newtype Book a = Book (Map a (Seq.Seq Entry))
-  deriving (Show)
+  deriving (Show, Eq)
 
 -- | Empty limit order book.
 empty :: Book a
