@@ -14,14 +14,14 @@ module Data.TheBook.Engine (
     Engine, emptyEngine
 ) where
 
-import           Control.Lens       (makeLenses)
+import           Control.Lens       (makeLenses, to)
 import           Data.TheBook.Book  (Book)
 import qualified Data.TheBook.Book  as Book
 import qualified Data.TheBook.Types as Types
 
 -- | Main type for the state of the matching engine.
 data Engine = Engine {
-    _dictionary :: Types.Dictionary
+    _dictionary :: !Types.Dictionary
   , _session    :: Maybe Types.SessionID
   , _order      :: Maybe Types.Order
   , _buys       :: Book Book.Buy
@@ -37,6 +37,12 @@ instance Types.WithSession (Engine) where
 
 instance Types.WithOrder (Engine) where
   orderL = order
+
+instance Book.WithTopBuy (Engine) where
+  topBuyL = buys . to Book.top
+
+instance Book.WithTopSell (Engine) where
+  topSellL = sells . to Book.top
 
 -- | Creates an empty engine.
 emptyEngine :: Types.Dictionary

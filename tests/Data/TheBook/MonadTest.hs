@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- |
@@ -11,9 +12,16 @@
 -----------------------------------------------------------------------------
 module Data.TheBook.MonadTest (tests) where
 
+import           Control.Lens          (view)
 import           Control.Monad         (mzero, (>>))
+import           Data.TheBook.Engine
 import           Data.TheBook.Monad
+import           Data.TheBook.Rule
 import           Data.TheBook.Types    as T
+import           Data.TheBook.Types    (OrderRejectReason,
+                                        OrderRejectReason (..), SessionID,
+                                        WithDictionary, WithOrder, WithSession,
+                                        dictL, orderL, sessionL)
 import           Test.Tasty
 import           Test.Tasty.QuickCheck as QC
 
@@ -66,4 +74,13 @@ prop_bind_should_stop_at_no_match = isNoMatch (runRule rule s')
   where rule :: TestRule Int
         rule = return (1 :: Int) >> mzero >> return 1
 
+validatePrice :: (WithDictionary r, WithOrder r)
+              => Validation r OrderRejectReason m
+validatePrice = do
+  -- Deps
+  dict <- view dictL
+  order <- condR orderL
+
+  -- Validations
+  require True OIncorrectPriceIncrement
 

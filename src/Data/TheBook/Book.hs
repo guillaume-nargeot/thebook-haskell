@@ -15,16 +15,21 @@ module Data.TheBook.Book (
     , Buy
     , Sell
     , Side
+    , WithTopBuy
+    , topBuyL
+    , WithTopSell
+    , topSellL
     , price
     , qty
     , empty
     , insert
+    , top
     , fromList
     , toList
  ) where
 
 import           Control.Arrow      ((&&&))
-import           Control.Lens       (Lens')
+import           Control.Lens       (Getter)
 import qualified Data.Foldable      as Fold
 import qualified Data.List          as List
 import           Data.Map           (Map)
@@ -51,7 +56,7 @@ newtype Buy = Buy Types.Price
   deriving (Show)
 
 class WithTopBuy a where
-  topBuyL :: Lens' a (Maybe Entry)
+  topBuyL :: Getter a (Maybe Entry)
 
 -- | Specifies a sell 'Book'.
 -- Entries will be sorted from low to high price.
@@ -59,7 +64,7 @@ newtype Sell = Sell Types.Price
   deriving (Show)
 
 class WithTopSell a where
-  topSellL :: Lens' a (Maybe Entry)
+  topSellL :: Getter a (Maybe Entry)
 
 instance Eq Buy where
     (Buy p1) == (Buy p2) = p1 == p2
@@ -99,6 +104,24 @@ insert price' qty' (Book book) =
             newLevel = Seq.singleton newEntry
             newPrice = liftPrice price'
         in Book $ Map.alter (Just . Maybe.maybe newLevel (Seq.|> newEntry )) newPrice book
+
+-- | O(log n). Gets the entry at the top of the book.
+--
+-- >> top $ (fromList [(50.0,10),(51.0,100)]) :: Book Buy
+-- Just (Entry { price = 51.0, qty = 100 })
+--
+-- >> top $ (fromList [(51.0,100),(50.0,10)]) :: Book Sell
+-- Just (Entry { price = 50.0, qty = 10 })
+--
+-- >> top (empty :: Book Buy)
+-- Nothing
+top :: Side a
+    => Book a
+    -> Maybe Entry
+top (Book book) = fmap (getTop . Seq.viewl)  (Maybe.listToMaybe . Map.elems $ book)
+  where getTop (a Seq.:< _) = a
+        getTop _            = error "This should never happen"
+
 
 -- | Creates a 'Book' from a list of ('Types.Price', 'Types.Qty') pairs.
 fromList :: Side a

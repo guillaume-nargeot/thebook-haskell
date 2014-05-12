@@ -65,6 +65,7 @@ library
                     , generated
   ghc-options:       -Wall 
                      -fwarn-incomplete-patterns
+                     -funbox-strict-fields
 
 executable thebook
   main-is:            Main.hs
@@ -90,6 +91,7 @@ executable thebook
                      -fwarn-incomplete-patterns
                      -rtsopts 
                      -threaded
+                     -funbox-strict-fields
 
 executable thebook-demo-client
   main-is:            Client.hs
@@ -115,6 +117,7 @@ executable thebook-demo-client
                     , QuickCheck == 2.6.*
   hs-source-dirs:     demo
   ghc-options:       -Wall -O2 -fwarn-incomplete-patterns -rtsopts -threaded
+                     -funbox-strict-fields
 
 executable thebook-demo-server
   main-is:            Server.hs
@@ -143,6 +146,7 @@ executable thebook-demo-server
                      -fwarn-incomplete-patterns 
                      -rtsopts 
                      -threaded
+                     -funbox-strict-fields
 
 test-suite thebook-hpc
   main-is:            Test.hs
@@ -168,6 +172,7 @@ test-suite thebook-hpc
                      -fhpc 
                      -hpcdir 
                       dist/hpc/mix/thebook-tests
+                     -funbox-strict-fields
   hs-source-dirs:     src 
                     , generated
                     , tests
@@ -194,7 +199,8 @@ test-suite thebook-tests
                     , fsnotify >= 0.0.11
                     , system-filepath >= 0.4.7
   Ghc-Options:       -Wall 
-                     -O0 
+                     -O0
+                     -funbox-strict-fields 
   hs-source-dirs:     src 
                     , generated
                     , tests
@@ -223,3 +229,4 @@ benchmark thebook-bench
                     , system-filepath
   ghc-options:       -Wall
                      -O2
+                     -funbox-strict-fields

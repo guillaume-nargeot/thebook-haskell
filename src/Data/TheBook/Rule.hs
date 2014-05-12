@@ -21,10 +21,7 @@ import           Control.Monad.Error  (MonadError, throwError)
 import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.State  (MonadState)
 import           Control.Monad.Writer (MonadWriter, tell)
-import           Data.TheBook.Types   (OrderRejectReason,
-                                       OrderRejectReason (..), SessionID,
-                                       WithDictionary, WithOrder, WithSession,
-                                       dictL, orderL, sessionL)
+import           Data.TheBook.Types   (SessionID, WithSession, sessionL)
 
 data Command msg
   = SendMessage msg SessionID
@@ -61,22 +58,6 @@ mfromMaybe = maybe mzero return
 -- some aspect of an order. If this rule does not fire,
 -- it means the validation was passed.
 type Validation r e m = (Applicative m, Functor m, MonadReader r m, MonadError e m, MonadPlus m) => m ()
-
-validatePrice :: (WithDictionary r, WithOrder r)
-              => Validation r OrderRejectReason m
-validatePrice = do
-  -- Deps
-  dict <- view dictL
-  order <- condR orderL
-
-  -- Validations
-  require True OIncorrectPriceIncrement
-
-
-  --action <$> pure dictL <*> orderL
-  --where action dict order = return ()
-
-
 
 -- Ideas:
 -- * Continue doing these small state/reader typeclasses, e.g. WithSession, WithBook
