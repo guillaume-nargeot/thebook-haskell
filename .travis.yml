@@ -1,7 +1,8 @@
 language: haskell
 
 before_install:
-  - cabal install 'hpc-coveralls == 0.2.1'
+  - cabal install --only-dependencies --enable-tests
+  - cabal install hpc-coveralls --avoid-reinstalls
 
 script:
   - cabal configure --enable-tests --enable-library-coverage
